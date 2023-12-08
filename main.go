@@ -149,7 +149,7 @@ var rootCmd = &cobra.Command{
         if err != nil {
             fmt.Println("Falha na criação dos jogos. Erro:", err)
         } else {
-            fmt.Println("Jogos criados com sucesso")
+            fmt.Println("Jogos criados com sucesso!")
         }
     },
 }
