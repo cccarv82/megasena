@@ -1,3 +1,11 @@
+// ##############################################################
+// ## @Author: Carlos Carvalho                                 ##
+// ##                                                          ##
+// ##       Código meramente para fins educacionais            ##
+// ##   Não utilizar para jogar na Mega-Sena, você perderá     ##
+// ##                                                          ##
+// ##############################################################
+
 package main
 
 import (
@@ -24,6 +32,25 @@ type Response struct {
 type NumberFrequency struct {
     Number    int
     Frequency int
+}
+
+func contains(s [][]int, e []int) bool {
+    for _, a := range s {
+        if len(a) != len(e) {
+            continue
+        }
+        match := true
+        for i, v := range a {
+            if v != e[i] {
+                match = false
+                break
+            }
+        }
+        if match {
+            return true
+        }
+    }
+    return false
 }
 
 var rootCmd = &cobra.Command{
@@ -56,7 +83,6 @@ var rootCmd = &cobra.Command{
                 fmt.Println("Falha na captura das informações. Erro:", err)
                 continue
             }
-
             body, _ := ioutil.ReadAll(resp.Body)
             resp.Body.Close()
 
@@ -101,23 +127,29 @@ var rootCmd = &cobra.Command{
             }
         }
 
+        qtdeDezenas := 7
+        qtdeJogos := 10
+
         rand.Seed(time.Now().UnixNano())
         var games [][]int
-        for i := 0; i < 10; i++ {
+        for i := 0; i < qtdeJogos; {
             perm := rand.Perm(15)
             var game []int
-            for _, v := range perm[:7] {
+            for _, v := range perm[:qtdeDezenas] {
                 game = append(game, top15[v])
             }
-            games = append(games, game)
+            if !contains(games, game) {
+                games = append(games, game)
+                i++
+            }
         }
 
         file, _ := json.MarshalIndent(games, "", " ")
         err := ioutil.WriteFile("jogos.json", file, 0644)
         if err != nil {
-            fmt.Println("Falha na captura das informações. Erro:", err)
+            fmt.Println("Falha na criação dos jogos. Erro:", err)
         } else {
-            fmt.Println("Informações Capturadas com sucesso")
+            fmt.Println("Jogos criados com sucesso")
         }
     },
 }
@@ -130,5 +162,10 @@ func Execute() {
 }
 
 func main() {
+    err := os.Truncate("jogos.json", 0)
+    if err != nil {
+        fmt.Println("Erro ao limpar o arquivo jogos.json:", err)
+    }
+
     Execute()
 }
