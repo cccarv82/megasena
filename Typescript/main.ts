@@ -25,7 +25,7 @@ async function main() {
 
     // Definindo o concurso atual e o concurso antigo
     const concursoAtual = 2664;
-    const concursoAntigo = 2600;
+    const concursoAntigo = 1;
     const total = concursoAtual - concursoAntigo + 1;
 
     // Criando a barra de progresso
@@ -33,7 +33,7 @@ async function main() {
     // Loop para buscar os resultados de cada concurso
     for (let i = concursoAtual; i >= concursoAntigo; i--) {
         // Construindo a URL da API
-        const url = `https://apiloterias.com.br/app/resultado?loteria=megasena&token=apiloterias.com.br&concurso=${i}`;
+        const url = `https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/${i}`;
 
         // Fazendo a requisição HTTP
         try {
