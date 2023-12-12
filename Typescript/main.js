@@ -59,7 +59,7 @@ function main() {
         // Função para gerar um jogo
         function generateGame(numberFrequencies) {
             var game = [];
-            while (game.length < 6) {
+            while (game.length < qtdeDezenas) {
                 var randomNumber = Math.floor(Math.random() * numberFrequencies.length);
                 var number = numberFrequencies[randomNumber].number;
                 if (!game.includes(number)) {
@@ -69,9 +69,9 @@ function main() {
             return game.sort(function (a, b) { return a - b; });
         }
         // Função para gerar jogos
-        function generateGames(numberFrequencies, numberOfGames) {
+        function generateGames(numberFrequencies) {
             var games = [];
-            while (games.length < numberOfGames) {
+            while (games.length < qtdeJogos) {
                 var game = generateGame(numberFrequencies);
                 if (!contains(game, games)) {
                     games.push(game);
@@ -79,20 +79,20 @@ function main() {
             }
             return games;
         }
-        var numberFrequencyMap, concursoAtual, concursoAntigo, total, bar, i, url, response, _i, _a, numberStr, number, err_1, numberFrequencies, games;
+        var numberFrequencyMap, concursoAtual, concursoAntigo, total, bar, i, url, response, _i, _a, numberStr, number, err_1, numberFrequencies, qtdeJogos, qtdeDezenas, games;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     numberFrequencyMap = {};
                     concursoAtual = 2664;
-                    concursoAntigo = 2600;
+                    concursoAntigo = 1;
                     total = concursoAtual - concursoAntigo + 1;
                     bar = new ProgressBar(':bar :current/:total (:percent)', { total: total });
                     i = concursoAtual;
                     _b.label = 1;
                 case 1:
                     if (!(i >= concursoAntigo)) return [3 /*break*/, 7];
-                    url = "https://apiloterias.com.br/app/resultado?loteria=megasena&token=apiloterias.com.br&concurso=".concat(i);
+                    url = "https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/".concat(i);
                     _b.label = 2;
                 case 2:
                     _b.trys.push([2, 4, , 5]);
@@ -132,14 +132,16 @@ function main() {
                     });
                     // Ordenando o array de objetos por frequência (decrescente) e número (crescente)
                     numberFrequencies.sort(function (a, b) { return b.frequency - a.frequency || a.number - b.number; });
-                    games = generateGames(numberFrequencies, 10);
+                    qtdeJogos = 10;
+                    qtdeDezenas = 7;
+                    games = generateGames(numberFrequencies);
                     // Escrevendo os jogos no arquivo jogos.json
                     fs.writeFileSync('jogos.json', JSON.stringify(games, null, 2));
                     console.log('Jogos criados com sucesso!');
+                    // Chamando a função principal
+                    main();
                     return [2 /*return*/];
             }
         });
     });
 }
-// Chamando a função principal
-main();

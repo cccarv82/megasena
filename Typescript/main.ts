@@ -111,4 +111,4 @@ async function main() {
         console.log('Jogos criados com sucesso!');
     
     // Chamando a função principal
-    main();
+    main();}
