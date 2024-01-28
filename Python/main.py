@@ -13,11 +13,11 @@ with open('jogos.json', 'w') as f:
     f.write('')
 
 concurso_atual = 2681
-concurso_antigo = 2000
+concurso_antigo = 1
 total = concurso_atual - concurso_antigo + 1
 qtdeJogos = 10
 qtdeDezenas = 7
-simulation_count = 1000
+simulation_count = 2000
 
 number_frequency_map = Counter()
 quad_frequency_map = Counter()  # Changed from pair_frequency_map
