@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 requests.packages.urllib3.disable_warnings()
 
-concurso_atual = 2681
+concurso_atual = 2600
 concurso_antigo = 1
 total = concurso_atual - concurso_antigo + 1
 qtdeJogos = 10
@@ -74,10 +74,11 @@ def simulate_draw(trio_trends: Dict[tuple, int]) -> List[int]:
 
 def simulate_draws(trio_trends: Dict[tuple, int], games: List[List[int]]) -> float:
     success_count = 0
+    games_set = [set(game) for game in games]  # Convert games to sets
     for _ in range(simulation_count):
-        draw = set(simulate_draw(trio_trends))
-        for game in games:
-            if set(game).issubset(draw):
+        draw = set(simulate_draw(trio_trends))  # Convert draw to set
+        for game_set in games_set:
+            if game_set.issubset(draw):
                 success_count += 1
                 break
     return success_count / simulation_count
