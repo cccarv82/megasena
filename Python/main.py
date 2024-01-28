@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import random
+import pickle
 from tqdm import tqdm
 from collections import Counter, defaultdict
 from typing import List, Dict
@@ -23,6 +24,16 @@ number_frequency_map = Counter()
 quad_frequency_map = Counter()  # Changed from pair_frequency_map
 quad_trend_map = defaultdict(list)  # Changed from pair_trend_map
 
+def save_state(state, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(state, f)
+
+def load_state(filename):
+    try:
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return None
 def get_concurso_data(concurso: int) -> List[int]:
     for _ in range(5):  # Try up to 5 times
         try:
@@ -81,7 +92,6 @@ def simulate_draws(quad_trends: Dict[tuple, int], games: List[List[int]]) -> flo
                 success_count += 1
                 break
     return success_count / simulation_count
-
 def main():
     print("Iniciando a coleta de dados...")
     for concurso in tqdm(range(concurso_antigo, concurso_atual + 1)):
