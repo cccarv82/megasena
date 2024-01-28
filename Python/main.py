@@ -21,8 +21,8 @@ qtdeDezenas = 7
 simulation_count = 2000
 
 number_frequency_map = Counter()
-quad_frequency_map = Counter()  # Changed from pair_frequency_map
-quad_trend_map = defaultdict(list)  # Changed from pair_trend_map
+trio_frequency_map = Counter()  # Changed from quad_frequency_map
+trio_trend_map = defaultdict(list)  # Changed from quad_trend_map
 
 def save_state(state, filename):
     with open(filename, 'wb') as f:
@@ -47,67 +47,69 @@ def get_concurso_data(concurso: int) -> List[int]:
             time.sleep(5)  # Wait for 5 seconds before trying again
     return []  # Return empty list if all attempts fail
 
-def update_quad_frequencies(numbers: List[int]):  # Changed from update_pair_frequencies
-    for quad in combinations(numbers, 4):  # Changed from 2 to 4
-        sorted_quad = tuple(sorted(quad))  # Changed from pair to quad
-        quad_frequency_map.update([sorted_quad])  # Changed from pair_frequency_map
-        quad_trend_map[sorted_quad].append(quad_frequency_map[sorted_quad])  # Changed from pair_trend_map
+
+def update_trio_frequencies(numbers: List[int]):  # Changed from update_quad_frequencies
+    for trio in combinations(numbers, 3):  # Changed from 4 to 3
+        sorted_trio = tuple(sorted(trio))  # Changed from quad to trio
+        trio_frequency_map.update([sorted_trio])  # Changed from quad_frequency_map
+        trio_trend_map[sorted_trio].append(trio_frequency_map[sorted_trio])  # Changed from quad_trend_map
 
 def calculate_trends():
-    quad_trends = {}  # Changed from pair_trends
-    for quad, frequencies in quad_trend_map.items():  # Changed from pair_trend_map
+    trio_trends = {}  # Changed from quad_trends
+    for trio, frequencies in trio_trend_map.items():  # Changed from quad_trend_map
         trend = frequencies[-1] - frequencies[0]  # change in frequency
-        quad_trends[quad] = trend  # Changed from pair_trends
-    return quad_trends  # Changed from pair_trends
+        trio_trends[trio] = trend  # Changed from quad_trends
+    return trio_trends  # Changed from quad_trends
 
-def generate_game(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from pair_trends
+def generate_game(trio_trends: Dict[tuple, int]) -> List[int]:  # Changed from quad_trends
     game = []
-    sorted_quads = sorted(quad_trends.items(), key=lambda x: x[1], reverse=True)  # Changed from pair_trends
-    while len(game) < qtdeDezenas and sorted_quads:
-        quad, _ = sorted_quads.pop(0)  # Changed from pair to quad
-        for number in quad:  # Changed from pair to quad
+    sorted_trios = sorted(trio_trends.items(), key=lambda x: x[1], reverse=True)  # Changed from quad_trends
+    while len(game) < qtdeDezenas and sorted_trios:
+        trio, _ = sorted_trios.pop(0)  # Changed from quad to trio
+        for number in trio:  # Changed from quad to trio
             if number not in game:
                 game.append(number)
     return sorted(game)
 
-def generate_games(quad_trends: Dict[tuple, int]) -> List[List[int]]:  # Changed from pair_trends
+def generate_games(trio_trends: Dict[tuple, int]) -> List[List[int]]:  # Changed from quad_trends
     games = set()
     pbar = tqdm(total=qtdeJogos, desc="Generating games", ncols=100)  # Create a progress bar
     while len(games) < qtdeJogos:
-        game = tuple(sorted(generate_game(quad_trends)))  # Changed from pair_trends
+        game = tuple(sorted(generate_game(trio_trends)))  # Changed from quad_trends
         games.add(game)
         pbar.update(len(games) - pbar.n)  # Update the progress bar
     pbar.close()
     return [list(game) for game in games]
 
-def simulate_draw(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from pair_trends
-    return generate_game(quad_trends)  # Changed from pair_trends
+def simulate_draw(trio_trends: Dict[tuple, int]) -> List[int]:  # Changed from quad_trends
+    return generate_game(trio_trends)  # Changed from quad_trends
 
-def simulate_draws(quad_trends: Dict[tuple, int], games: List[List[int]]) -> float:  # Changed from pair_trends
+def simulate_draws(trio_trends: Dict[tuple, int], games: List[List[int]]) -> float:  # Changed from quad_trends
     success_count = 0
     for _ in range(simulation_count):
-        draw = set(simulate_draw(quad_trends))  # Changed from pair_trends
+        draw = set(simulate_draw(trio_trends))  # Changed from quad_trends
         for game in games:
             if set(game).issubset(draw):
                 success_count += 1
                 break
     return success_count / simulation_count
+
 def main():
     print("Iniciando a coleta de dados...")
     for concurso in tqdm(range(concurso_antigo, concurso_atual + 1)):
         dezenas = get_concurso_data(concurso)
         number_frequency_map.update(dezenas)
-        update_quad_frequencies(dezenas)  # Changed from update_pair_frequencies
+        update_trio_frequencies(dezenas)  # Changed from update_quad_frequencies
         time.sleep(1)
 
     print("Dados coletados. Calculando tendências...")
-    quad_trends = calculate_trends()  # Changed from pair_trends
+    trio_trends = calculate_trends()  # Changed from quad_trends
 
     print("Tendências calculadas. Gerando jogos...")
-    games = generate_games(quad_trends)  # Changed from pair_trends
+    games = generate_games(trio_trends)  # Changed from quad_trends
 
     print("Jogos gerados. Simulando sorteios...")
-    success_rate = simulate_draws(quad_trends, games)  # Changed from pair_trends
+    success_rate = simulate_draws(trio_trends, games)  # Changed from quad_trends
 
     print(f'Taxa de sucesso: {success_rate * 100}%')
 
