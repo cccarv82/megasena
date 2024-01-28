@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import random
 from tqdm import tqdm
 from collections import Counter, defaultdict
 from typing import List, Dict
@@ -16,6 +17,7 @@ concurso_antigo = 2000
 total = concurso_atual - concurso_antigo + 1
 qtdeJogos = 10
 qtdeDezenas = 7
+simulation_count = 1000
 
 number_frequency_map = Counter()
 pair_frequency_map = Counter()
@@ -60,6 +62,19 @@ def generate_games(pair_trends: Dict[tuple, int]) -> List[List[int]]:
             games.append(game)
     return games
 
+def simulate_draw(pair_trends: Dict[tuple, int]) -> List[int]:
+    return generate_game(pair_trends)
+
+def simulate_draws(pair_trends: Dict[tuple, int], games: List[List[int]]) -> float:
+    success_count = 0
+    for _ in range(simulation_count):
+        draw = set(simulate_draw(pair_trends))
+        for game in games:
+            if set(game).issubset(draw):
+                success_count += 1
+                break
+    return success_count / simulation_count
+
 def main():
     print("Iniciando a coleta de dados...")
     for concurso in tqdm(range(concurso_antigo, concurso_atual + 1)):
@@ -73,6 +88,11 @@ def main():
 
     print("Tendências calculadas. Gerando jogos...")
     games = generate_games(pair_trends)
+
+    print("Jogos gerados. Simulando sorteios...")
+    success_rate = simulate_draws(pair_trends, games)
+
+    print(f'Taxa de sucesso: {success_rate * 100}%')
 
     with open('jogos.json', 'w') as f:
         json.dump(games, f, indent=2)
