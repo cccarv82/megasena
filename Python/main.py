@@ -96,11 +96,21 @@ def simulate_draws(trio_trends: Dict[tuple, int], games: List[List[int]]) -> flo
 
 def main():
     print("Iniciando a coleta de dados...")
+    
+    # Load state if it exists
+    state = load_state('state.pkl')
+    if state is not None:
+        global number_frequency_map, trio_frequency_map, trio_trend_map
+        number_frequency_map, trio_frequency_map, trio_trend_map = state
+
     for concurso in tqdm(range(concurso_antigo, concurso_atual + 1)):
         dezenas = get_concurso_data(concurso)
         number_frequency_map.update(dezenas)
         update_trio_frequencies(dezenas)  # Changed from update_quad_frequencies
         time.sleep(1)
+
+        # Save state after each concurso
+        save_state((number_frequency_map, trio_frequency_map, trio_trend_map), 'state.pkl')
 
     print("Dados coletados. Calculando tendências...")
     trio_trends = calculate_trends()  # Changed from quad_trends
