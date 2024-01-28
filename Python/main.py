@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 from typing import List, Dict
 from itertools import combinations
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 
 requests.packages.urllib3.disable_warnings()
 
@@ -102,15 +103,28 @@ def main():
 
     concursos = range(concurso_antigo, concurso_atual + 1)
     with ThreadPoolExecutor(max_workers=10) as executor:
-        for concurso in concursos:
-            dezenas = get_concurso_data(concurso)
-            if dezenas:
-                cursor.execute('INSERT INTO concursos (concurso, dezenas) VALUES (?, ?)', (concurso, json.dumps(dezenas)))
-                number_frequency_map.update(dezenas)
-                update_trio_frequencies(dezenas)
+        futures = {executor.submit(get_concurso_data, concurso): concurso for concurso in concursos}
+        pbar = tqdm(total=len(concursos), desc="Coletando dados", ncols=100)  # Create a progress bar
+        for future in as_completed(futures):
+            concurso = futures[future]
+            try:
+                dezenas = future.result()
+            except Exception as exc:
+                print(f'Concurso {concurso} generated an exception: {exc}')
+            else:
+                if dezenas:
+                    cursor.execute('INSERT INTO concursos (concurso, dezenas) VALUES (?, ?)', (concurso, json.dumps(dezenas)))
+                    number_frequency_map.update(dezenas)
+                    update_trio_frequencies(dezenas)
+            pbar.update(1)  # Update the progress bar
+        pbar.close()
 
     print("Dados coletados. Calculando tendências...")
     trio_trends = calculate_trends()
+
+    # Print the number of unique numbers
+    unique_numbers = set(number for trio in trio_trends for number in trio)
+    print(f'Quantidade de números únicos para gerar os jogos: {len(unique_numbers)}')
 
     print("Tendências calculadas. Gerando jogos...")
     games = generate_games(trio_trends)
