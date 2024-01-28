@@ -20,8 +20,8 @@ qtdeDezenas = 7
 simulation_count = 1000
 
 number_frequency_map = Counter()
-pair_frequency_map = Counter()
-pair_trend_map = defaultdict(list)
+quad_frequency_map = Counter()  # Changed from pair_frequency_map
+quad_trend_map = defaultdict(list)  # Changed from pair_trend_map
 
 def get_concurso_data(concurso: int) -> List[int]:
     response = requests.get(f'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/{concurso}', verify=False)
@@ -31,44 +31,44 @@ def get_concurso_data(concurso: int) -> List[int]:
     else:
         return []
 
-def update_pair_frequencies(numbers: List[int]):
-    for pair in combinations(numbers, 2):
-        sorted_pair = tuple(sorted(pair))
-        pair_frequency_map.update([sorted_pair])
-        pair_trend_map[sorted_pair].append(pair_frequency_map[sorted_pair])
+def update_quad_frequencies(numbers: List[int]):  # Changed from update_pair_frequencies
+    for quad in combinations(numbers, 4):  # Changed from 2 to 4
+        sorted_quad = tuple(sorted(quad))  # Changed from pair to quad
+        quad_frequency_map.update([sorted_quad])  # Changed from pair_frequency_map
+        quad_trend_map[sorted_quad].append(quad_frequency_map[sorted_quad])  # Changed from pair_trend_map
 
 def calculate_trends():
-    pair_trends = {}
-    for pair, frequencies in pair_trend_map.items():
+    quad_trends = {}  # Changed from pair_trends
+    for quad, frequencies in quad_trend_map.items():  # Changed from pair_trend_map
         trend = frequencies[-1] - frequencies[0]  # change in frequency
-        pair_trends[pair] = trend
-    return pair_trends
+        quad_trends[quad] = trend  # Changed from pair_trends
+    return quad_trends  # Changed from pair_trends
 
-def generate_game(pair_trends: Dict[tuple, int]) -> List[int]:
+def generate_game(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from pair_trends
     game = []
-    sorted_pairs = sorted(pair_trends.items(), key=lambda x: x[1], reverse=True)
-    while len(game) < qtdeDezenas and sorted_pairs:
-        pair, _ = sorted_pairs.pop(0)
-        for number in pair:
+    sorted_quads = sorted(quad_trends.items(), key=lambda x: x[1], reverse=True)  # Changed from pair_trends
+    while len(game) < qtdeDezenas and sorted_quads:
+        quad, _ = sorted_quads.pop(0)  # Changed from pair to quad
+        for number in quad:  # Changed from pair to quad
             if number not in game:
                 game.append(number)
     return sorted(game)
 
-def generate_games(pair_trends: Dict[tuple, int]) -> List[List[int]]:
+def generate_games(quad_trends: Dict[tuple, int]) -> List[List[int]]:  # Changed from pair_trends
     games = []
     while len(games) < qtdeJogos:
-        game = generate_game(pair_trends)
+        game = generate_game(quad_trends)  # Changed from pair_trends
         if game not in games:
             games.append(game)
     return games
 
-def simulate_draw(pair_trends: Dict[tuple, int]) -> List[int]:
-    return generate_game(pair_trends)
+def simulate_draw(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from pair_trends
+    return generate_game(quad_trends)  # Changed from pair_trends
 
-def simulate_draws(pair_trends: Dict[tuple, int], games: List[List[int]]) -> float:
+def simulate_draws(quad_trends: Dict[tuple, int], games: List[List[int]]) -> float:  # Changed from pair_trends
     success_count = 0
     for _ in range(simulation_count):
-        draw = set(simulate_draw(pair_trends))
+        draw = set(simulate_draw(quad_trends))  # Changed from pair_trends
         for game in games:
             if set(game).issubset(draw):
                 success_count += 1
@@ -80,17 +80,17 @@ def main():
     for concurso in tqdm(range(concurso_antigo, concurso_atual + 1)):
         dezenas = get_concurso_data(concurso)
         number_frequency_map.update(dezenas)
-        update_pair_frequencies(dezenas)
+        update_quad_frequencies(dezenas)  # Changed from update_pair_frequencies
         time.sleep(1)
 
     print("Dados coletados. Calculando tendências...")
-    pair_trends = calculate_trends()
+    quad_trends = calculate_trends()  # Changed from pair_trends
 
     print("Tendências calculadas. Gerando jogos...")
-    games = generate_games(pair_trends)
+    games = generate_games(quad_trends)  # Changed from pair_trends
 
     print("Jogos gerados. Simulando sorteios...")
-    success_rate = simulate_draws(pair_trends, games)
+    success_rate = simulate_draws(quad_trends, games)  # Changed from pair_trends
 
     print(f'Taxa de sucesso: {success_rate * 100}%')
 
