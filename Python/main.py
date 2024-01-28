@@ -60,12 +60,14 @@ def generate_game(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from p
     return sorted(game)
 
 def generate_games(quad_trends: Dict[tuple, int]) -> List[List[int]]:  # Changed from pair_trends
-    games = []
+    games = set()
+    pbar = tqdm(total=qtdeJogos, desc="Generating games", ncols=100)  # Create a progress bar
     while len(games) < qtdeJogos:
-        game = generate_game(quad_trends)  # Changed from pair_trends
-        if game not in games:
-            games.append(game)
-    return games
+        game = tuple(sorted(generate_game(quad_trends)))  # Changed from pair_trends
+        games.add(game)
+        pbar.update(len(games) - pbar.n)  # Update the progress bar
+    pbar.close()
+    return [list(game) for game in games]
 
 def simulate_draw(quad_trends: Dict[tuple, int]) -> List[int]:  # Changed from pair_trends
     return generate_game(quad_trends)  # Changed from pair_trends
