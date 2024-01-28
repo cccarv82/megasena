@@ -24,12 +24,17 @@ quad_frequency_map = Counter()  # Changed from pair_frequency_map
 quad_trend_map = defaultdict(list)  # Changed from pair_trend_map
 
 def get_concurso_data(concurso: int) -> List[int]:
-    response = requests.get(f'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/{concurso}', verify=False)
-    if response.status_code == 200 and response.text.strip():
-        data = response.json()
-        return data.get('dezenasSorteadasOrdemSorteio', [])
-    else:
-        return []
+    for _ in range(5):  # Try up to 5 times
+        try:
+            response = requests.get(f'https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/{concurso}', verify=False)
+            if response.status_code == 200 and response.text.strip():
+                data = response.json()
+                return data.get('dezenasSorteadasOrdemSorteio', [])
+            else:
+                return []
+        except requests.exceptions.RequestException:
+            time.sleep(5)  # Wait for 5 seconds before trying again
+    return []  # Return empty list if all attempts fail
 
 def update_quad_frequencies(numbers: List[int]):  # Changed from update_pair_frequencies
     for quad in combinations(numbers, 4):  # Changed from 2 to 4
