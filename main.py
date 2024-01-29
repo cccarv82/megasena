@@ -99,7 +99,7 @@ def calculate_qtdeJogos(amount: float, dezenas: int) -> int:
 def generate_game(trio_trends: Dict[tuple, int]) -> List[int]:
     game = []
     sorted_trios = sorted(trio_trends.items(), key=lambda x: x[1], reverse=True)
-    while len(game) < qtdeDezenas and sorted_trios:
+    while len(game) < sorted_trios:
         trio, _ = random.choice(sorted_trios)  # Select a random trio
         sorted_trios.remove((trio, _))  # Remove the selected trio from the list
         for number in trio:
