@@ -1,41 +1,21 @@
 # Mega Sena Number Generator
 
-Este repositório contém três programas que geram números para a Mega Sena com base na frequência de números sorteados em concursos anteriores. Os programas estão escritos em Go, TypeScript e Python.
+Este repositório contém um programa em Python que gera números para a Mega Sena com base na frequência de números sorteados em concursos anteriores.
 
 ## Pré-requisitos
 
-Para executar os programas, você precisa ter Go, Node.js e Python instalados em seu sistema.
+Para executar o programa, você precisa ter Python instalado em seu sistema.
 
-- Para instalar Go, siga as instruções na [página oficial de download do Go](https://golang.org/dl/).
-- Para instalar Node.js, siga as instruções na [página oficial de download do Node.js](https://nodejs.org/en/download/).
 - Para instalar Python, siga as instruções na [página oficial de download do Python](https://www.python.org/downloads/).
 
 ### Instalando as bibliotecas
-
-#### Python
 
 No diretório do programa Python, crie um ambiente virtual e instale as dependências com os seguintes comandos:
 
 ```bash
 python3 -m venv env
 source env/bin/activate
-pip install requests tqdm
-```
-
-#### Go
-
-No diretório do programa Go, instale as dependências com o seguinte comando:
-
-```bash
-go get
-```
-
-#### TypeScript
-
-No diretório do programa TypeScript, instale as dependências com o seguinte comando:
-
-```bash
-npm install
+pip install requests tqdm sqlite3
 ```
 
 ### Usando um ambiente virtual
@@ -58,31 +38,7 @@ Para desativar o ambiente virtual, use o seguinte comando:
 deactivate
 ```
 
-## Executando os programas
-
-### Go
-
-No diretório do programa Go, execute o seguinte comando:
-
-```bash
-go run main.go
-```
-
-### TypeScript
-
-Primeiro, compile o programa TypeScript com o seguinte comando:
-
-```bash
-tsc main.ts
-```
-
-Em seguida, execute o programa com o seguinte comando:
-
-```bash
-node main.js
-```
-
-### Python
+## Executando o programa
 
 No diretório do programa Python, execute o seguinte comando:
 
@@ -90,7 +46,7 @@ No diretório do programa Python, execute o seguinte comando:
 python main.py
 ```
 
-Os programas irão gerar 10 jogos únicos e escrevê-los no arquivo `jogos.json`. Cada jogo é um array de 6 números, e os números são escolhidos com base em suas frequências nos resultados dos concursos da Mega Sena.
+O programa irá gerar um número definido de jogos únicos e escrevê-los no banco de dados SQLite `lottery.db`. Cada jogo é um array de números, e os números são escolhidos com base em suas frequências nos resultados dos concursos da Mega Sena.
 
 ## Aviso
 
