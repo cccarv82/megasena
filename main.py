@@ -122,7 +122,7 @@ def update_trio_frequencies(numbers: List[int]):
     logging.info('Starting update_trio_frequencies\n'
                  f'Input numbers: {numbers}\n')
     ...
-    for trio in combinations(numbers, 6):
+    for trio in combinations(numbers, 3):
         sorted_trio = tuple(sorted(trio))
         trio_frequency_map.update([sorted_trio])
         trio_trend_map[sorted_trio].append(trio_frequency_map[sorted_trio])
