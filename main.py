@@ -13,17 +13,40 @@ from concurrent.futures import as_completed
 
 requests.packages.urllib3.disable_warnings()
 
-concurso_atual = 2681
-concurso_antigo = 1
-total = concurso_atual - concurso_antigo + 1
-qtdeJogos = 70 # 1 jogo de 6 = 5 reais | 1 jogo de 7 = 35 reais
-qtdeDezenas = 6
+# concurso_atual = 2681
+# concurso_antigo = 1
+# total = concurso_atual - concurso_antigo + 1
+# qtdeJogos = 70 # 1 jogo de 6 = 5 reais | 1 jogo de 7 = 35 reais
+# qtdeDezenas = 6
 
 number_frequency_map = Counter()
 trio_frequency_map = Counter()
 trio_trend_map = defaultdict(list)
 
-def get_concurso_data(concurso: int) -> List[int]:
+price_per_game_map = {
+    6: 5,
+    7: 35,
+    8: 140,
+    9: 420,
+    10: 1050,
+    11: 2310,
+    12: 4620,
+    13: 8580,
+    14: 15015,
+    15: 25025,
+    16: 40040,
+    17: 61880,
+    18: 92820,
+    19: 135660,
+    20: 193800
+}
+
+def get_latest_concurso():
+    response = requests.get("https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/", verify=False)
+    data = json.loads(response.text)
+    return data['numeroConcursoAnterior'] + 1
+
+def get_concurso_data(concurso_atual: int, concurso: int) -> List[int]:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     }
@@ -55,6 +78,24 @@ def calculate_trends():
         trio_trends[trio] = trend
     return trio_trends
 
+def get_user_input():
+    amount = float(input("Informe quantos Reais utilizará para jogar: R$ "))
+    dezenas = int(input("Quantas dezenas cada jogo deve ter ? "))
+    while dezenas < 6 or dezenas > 20 or amount < price_per_game_map[dezenas]:
+        if dezenas < 6 or dezenas > 20:
+            print("A quantidade de dezenas deve ser entre 6 e 20.")
+        else:
+            print(f"O valor mínimo para jogar com {dezenas} dezenas é R$ {price_per_game_map[dezenas]:.2f}")
+        amount = float(input("Informe quantos Reais utilizará para jogar: R$ "))
+        dezenas = int(input("Quantas dezenas cada jogo deve ter ? "))
+    return amount, dezenas
+
+def calculate_qtdeJogos(amount: float, dezenas: int) -> int:
+    price_per_game = price_per_game_map.get(dezenas)
+    if price_per_game is None:
+        raise ValueError("Número de dezenas inválido")
+    return int(amount // price_per_game)
+
 def generate_game(trio_trends: Dict[tuple, int]) -> List[int]:
     game = []
     sorted_trios = sorted(trio_trends.items(), key=lambda x: x[1], reverse=True)
@@ -66,7 +107,7 @@ def generate_game(trio_trends: Dict[tuple, int]) -> List[int]:
                 game.append(number)
     return sorted(game)
 
-def generate_games(trio_trends):
+def generate_games(trio_trends, qtdeJogos, qtdeDezenas):
     games = set()
     while len(games) < qtdeJogos:
         game = set()
@@ -112,6 +153,12 @@ def load_concurso_data(cursor):
         update_trio_frequencies(dezenas)
 
 def main():
+    concurso_atual = get_latest_concurso()
+    concurso_antigo = 1
+    total = concurso_atual - concurso_antigo + 1
+    amount, dezenas = get_user_input()
+    qtdeJogos = calculate_qtdeJogos(amount, dezenas)
+
     print("Iniciando a coleta de dados...")
 
     # Create a connection to the SQLite database
@@ -139,7 +186,7 @@ def main():
     concursos = [concurso for concurso in range(concurso_antigo, concurso_atual + 1) if concurso not in existing_concursos]
 
     with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(get_concurso_data, concurso): concurso for concurso in concursos}
+        futures = {executor.submit(get_concurso_data, concurso_atual, concurso): concurso for concurso in concursos}
         pbar = tqdm(total=len(concursos), desc="Coletando dados", ncols=100)  # Create a progress bar
         for future in as_completed(futures):
             concurso = futures[future]
@@ -158,14 +205,11 @@ def main():
     print("Dados coletados. Calculando tendências...")
     trio_trends = calculate_trends()
 
-    # Print the number of unique numbers
-    unique_numbers = set(number for trio in trio_trends for number in trio)
-    print(f'Quantidade de números únicos para gerar os jogos: {len(unique_numbers)}')
 
-    print("Tendências calculadas. Gerando jogos...")
-    games = generate_games(trio_trends)
+    print(f"Tendências calculadas. Gerando {qtdeJogos} jogos...")
+    games = generate_games(trio_trends, qtdeJogos, dezenas)
 
-    print("Jogos gerados. Simulando sorteios...")
+    print(f"{qtdeJogos} Jogos gerados. Simulando sorteios...")
     success_rate_6, success_rate_5, success_rate_4 = simulate_draws(trio_trends, games, cursor)
 
     print(f'Taxa de sucesso para 6 números: {format(success_rate_6 * 100, ".2f")}%')
