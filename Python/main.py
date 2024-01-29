@@ -16,9 +16,8 @@ requests.packages.urllib3.disable_warnings()
 concurso_atual = 2681
 concurso_antigo = 1
 total = concurso_atual - concurso_antigo + 1
-qtdeJogos = 30 # 1 jogo de 6 = 5 reais | 1 jogo de 7 = 35 reais
+qtdeJogos = 70 # 1 jogo de 6 = 5 reais | 1 jogo de 7 = 35 reais
 qtdeDezenas = 6
-simulation_count = 3000
 
 number_frequency_map = Counter()
 trio_frequency_map = Counter()
@@ -34,11 +33,12 @@ def get_concurso_data(concurso: int) -> List[int]:
             if response.status_code == 200 and response.text.strip():
                 data = response.json()
                 return data.get('dezenasSorteadasOrdemSorteio', [])
+            elif response.status_code == 500:
+                time.sleep(5)  # Wait for 5 seconds before trying again
             else:
                 print(f"Attempt {attempt + 1} failed with status code {response.status_code}")
                 return []
         except requests.exceptions.RequestException as e:
-            print(f"Attempt {attempt + 1} failed with exception: {e}")
             time.sleep(5)  # Wait for 5 seconds before trying again
     return []  # Return empty list if all attempts fail
 
@@ -67,14 +67,16 @@ def generate_game(trio_trends: Dict[tuple, int]) -> List[int]:
     return sorted(game)
 
 def generate_games(trio_trends):
-    games = []
-    for _ in range(10):
+    games = set()
+    while len(games) < qtdeJogos:
         game = set()
         while len(game) < qtdeDezenas:
             trio = random.choice(list(trio_trends.keys()))
             game.update(trio)
-        games.append(sorted(list(game)))
-    return games
+            if len(game) > qtdeDezenas:
+                game = set(list(game)[:qtdeDezenas])  # If the game has more than qtdeDezenas, trim it down
+        games.add(tuple(sorted(list(game))))  # Add the game to the set of games
+    return [list(game) for game in games]  # Convert the set of games back to a list of games
 
 def simulate_draw(trio_trends: Dict[tuple, int]) -> List[int]:
     return generate_game(trio_trends)
@@ -136,7 +138,7 @@ def main():
     # Only download the concursos that are not already in the database
     concursos = [concurso for concurso in range(concurso_antigo, concurso_atual + 1) if concurso not in existing_concursos]
 
-    with ThreadPoolExecutor(max_workers=1) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(get_concurso_data, concurso): concurso for concurso in concursos}
         pbar = tqdm(total=len(concursos), desc="Coletando dados", ncols=100)  # Create a progress bar
         for future in as_completed(futures):
