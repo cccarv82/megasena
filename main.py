@@ -349,14 +349,14 @@ def main():
         for future in as_completed(futures):
             concurso = futures[future]
             try:
-                dezenas = future.result()
+                dezenas_result = future.result()
             except Exception as exc:
                 logging.error(f'Concurso {concurso} generated an exception: {exc}\n')
             else:
-                if dezenas:
-                    cursor.execute('INSERT INTO concursos (concurso, dezenas) VALUES (?, ?)', (concurso, json.dumps(dezenas)))
-                    number_frequency_map.update(dezenas)
-                    update_trio_frequencies(dezenas)
+                if dezenas_result:
+                    cursor.execute('INSERT INTO concursos (concurso, dezenas) VALUES (?, ?)', (concurso, json.dumps(dezenas_result)))
+                    number_frequency_map.update(dezenas_result)
+                    update_trio_frequencies(dezenas_result)
             pbar.update(1)  # Update the progress bar
         pbar.close()
 
